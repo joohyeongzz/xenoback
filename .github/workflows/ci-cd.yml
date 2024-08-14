@@ -35,3 +35,17 @@ jobs:
         run: |
           echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
           docker push joohyeongzz/xenoback:latest
+
+      - name: Deploy to EC2
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+            echo ${{ secrets.SSH_PEM_KEY}} >> $HOME/key.pem
+            chmod 400 $HOME/key.pem
+            ssh -i $HOME/key.pem -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }
+            docker pull ${{ secrets.DOCKER_USERNAME }}/xenoback:latest
+            docker stop xenoback || true
+            docker rm xenoback || true
+            docker run -d --name xenoback -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -p 8090:8090 ${{ secrets.DOCKER_USERNAME }}/xenoback:latest
+            EOF
