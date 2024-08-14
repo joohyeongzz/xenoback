@@ -45,7 +45,7 @@ jobs:
         
 
               EXISTING_CONTAINER_PORT=$(docker ps --filter "name=xenoback_old" --format '{{.Ports}}' | grep -oP '8090|8091' | head -n 1)
-
+              echo "Starting new container on port $EXISTING_CONTAINER_PORT."
               # 포트 번호 확인 및 설정
               if [ -z "$EXISTING_CONTAINER_PORT" ]; then
               echo "No existing container found. Starting new container on port 8090."
