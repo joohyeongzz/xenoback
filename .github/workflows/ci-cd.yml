@@ -43,32 +43,36 @@ jobs:
             ssh -i $HOME/key.pem -o StrictHostKeyChecking=no ubuntu@${{secrets.EC2_PUBLIC_IP}} << EOF
               docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/xenoback:latest
         
-
+              # 현재 컨테이너 포트 확인
               EXISTING_CONTAINER_PORT=$(docker ps --filter "name=xenoback_old" --format '{{.Ports}}' | grep -oP '8090|8091' | head -n 1)
-              echo "Starting new container on port $EXISTING_CONTAINER_PORT."
+              
+              # 현재 컨테이너 포트 출력
+              echo "Existing container is using port $EXISTING_CONTAINER_PORT."
+              
               # 포트 번호 확인 및 설정
               if [ -z "$EXISTING_CONTAINER_PORT" ]; then
               echo "No existing container found. Starting new container on port 8090."
               NEW_PORT=8090
               OLD_PORT=8091
-              else
-              if [ "$EXISTING_CONTAINER_PORT" = "8090" ]; then
+              
+              elif [ "$EXISTING_CONTAINER_PORT" = "8090" ]; then
               echo "Existing container is using port 8090. Starting new container on port 8091."
               NEW_PORT=8091
               OLD_PORT=8090
+              
               elif [ "$EXISTING_CONTAINER_PORT" = "8091" ]; then
               echo "Existing container is using port 8091. Starting new container on port 8090."
               NEW_PORT=8090
               OLD_PORT=8091
+              
               else
-              echo "Unexpected port configuration. Exiting."
+              echo "Unexpected configuration. Exiting."
               exit 1
               fi
-              fi
-        
-              echo "Starting new container on port $NEW_PORT."
-        
+              
               # 새 컨테이너 실행
+              echo "Starting new container on port $NEW_PORT." 
+  
               docker run -d --name xenoback_new \
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
@@ -80,8 +84,8 @@ jobs:
               echo "New container is running. Stopping and removing the old container."
               
               # 이전 컨테이너 중지 및 삭제
-              docker stop xenoback || true
-              docker rm xenoback || true
+              docker stop xenoback_old || true
+              docker rm xenoback_old || true
               
               # 새 컨테이너의 이름을 기존 컨테이너 이름으로 변경
               docker rename xenoback_new xenoback
