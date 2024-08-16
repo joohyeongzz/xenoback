@@ -42,4 +42,7 @@ jobs:
             chmod 400 $HOME/key.pem
             ssh -i $HOME/key.pem -o StrictHostKeyChecking=no ubuntu@52.79.186.150 << EOF
               docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/xenoback:latest
+              chmod 777 ./deploy.sh
+              ./deploy.sh
+              docker image prune -f
             EOF
